@@ -1,77 +1,64 @@
 ﻿#include "labs.h"
 
-
-#include <opencv2/opencv.hpp>
 #include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-//#include "background_segm.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/videoio.hpp"
+#include <opencv2/highgui.hpp>
+#include <opencv2/video.hpp>
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sstream>
-#include <string>
+#include<iostream>
 
 using namespace cv;
 using namespace std;
 
-// 1 background cale z czeronym, foreground gauss ghost
+int mixtures = 100;
+int history = 20;
+int shadows = 1;
+Ptr<BackgroundSubtractorMOG2> pMOG2;
 
-// transofrmacje hue, zaznacza linie
-
-// historia 20 , mieszanie 100
-// hoight linie
-
+static void trackbarSet(int, void*)
+{
+	pMOG2->setNMixtures(mixtures);
+	pMOG2->setHistory(history);
+	pMOG2 = createBackgroundSubtractorMOG2(history, 100, false);
+}
 
 int motionDetectionGauss() {
-	//VideoCapture vcap(1);
+	//VideoCapture vcap(0);
 	VideoCapture vcap("bike.avi");
 
-	Mat firstFrame, firstFrame2, frame, gray, dst, thresh, background, foreground, fgMaskMOG, fgMaskMOG2;
-
-	Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
-	pMOG2 = createBackgroundSubtractorMOG2();
+	vector<Vec4i> lines;
+	Mat frame, frame_with_lines, canny_frame, gray, background, foreground, fgMaskMOG2;
 
 	if (!vcap.isOpened())
 		return -1;
 
+
+	pMOG2 = createBackgroundSubtractorMOG2(history, 100, false);
 	namedWindow("Final window", 1);
-
-	int history = 20;
-	int mixtures = 100;
-
-	createTrackbar("history", "Final window", &history, 100);
-	createTrackbar("mixtures", "Final window", &mixtures, 255);
-
-	vcap >> frame;
-	cvtColor(frame, firstFrame, COLOR_BGR2GRAY);
-	GaussianBlur(firstFrame, firstFrame, Size(21, 21), 0);
-
+	createTrackbar("history", "Final window", &history, 200);
+	createTrackbar("mixtures", "Final window", &mixtures, 100, trackbarSet);
 
 	while (vcap.read(frame)) {
+
+		frame_with_lines = frame.clone();
 
 		cvtColor(frame, gray, COLOR_BGR2GRAY);
 		GaussianBlur(gray, gray, Size(21, 21), 0);
 
-		// Obliczenie wartoci bezwglêdnej ró¿nicy jasnoci pomiêdzy bie¿¹cym obrazem a t³em.
-		absdiff(firstFrame, gray, dst);
+		pMOG2->apply(frame, foreground);
+		pMOG2->getBackgroundImage(background);
+		//pMOG2->setDetectShadows(static_cast<bool>(shadows));
 
-		//update the background model
-		pMOG2->apply(frame, fgMaskMOG2);
+		vector<vector<Point> > contours;
+		findContours(foreground, contours, RETR_LIST, CHAIN_APPROX_NONE);
 
-		// Convert the image to black and white
-		threshold(dst, thresh, 100, 255, THRESH_BINARY);
+		for (int i = 0; i < contours.size(); i++)
+			drawContours(frame, contours, i, Scalar(0,0,255), 1);
 
-		gray = gray - dst;
-		//gray &= dst;
-
-		imshow("Original", frame);
-		imshow("FG Mask MOG 2", fgMaskMOG2);
-		imshow("dst", dst);
-		imshow("gray", gray);
-		imshow("thresh", thresh);
-		imshow("Final window", firstFrame);
+		imshow("Final window", frame);
+		imshow("Foreground", foreground);
+		imshow("Background", background);
 
 		char c = (char)waitKey(33);
 		if (c == 27) break;

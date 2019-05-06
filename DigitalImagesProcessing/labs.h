@@ -28,3 +28,5 @@ int colorDetectionMultiple();
 // detekcja ruchu gauss, hought
 int motionDetectionGauss();
 int houghTranform();
+
+int motionDetectionOpticalFlow();

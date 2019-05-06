@@ -11,7 +11,7 @@ using namespace std;
 
 int main() {
 
-	lab01();
+	//lab01();
 
 	//negativeImage();
 	//videoSaveFrames();
@@ -29,8 +29,10 @@ int main() {
 
 	//colorDetectionMultiple();
 
-	motionDetectionGauss();
+	//motionDetectionGauss();
 	//houghTranform();
+
+	motionDetectionOpticalFlow();
 
 	//test();
 
