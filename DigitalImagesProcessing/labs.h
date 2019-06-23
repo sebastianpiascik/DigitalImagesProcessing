@@ -30,3 +30,5 @@ int motionDetectionGauss();
 int houghTranform();
 
 int motionDetectionOpticalFlow();
+
+int faceDetect();

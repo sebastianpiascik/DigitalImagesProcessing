@@ -9,7 +9,7 @@ using namespace cv;
 using namespace std;
 
 
-int main() {
+int main2() {
 
 	//lab01();
 
@@ -32,7 +32,9 @@ int main() {
 	//motionDetectionGauss();
 	//houghTranform();
 
-	motionDetectionOpticalFlow();
+	//motionDetectionOpticalFlow();
+
+	//faceDetect();
 
 	//test();
 
